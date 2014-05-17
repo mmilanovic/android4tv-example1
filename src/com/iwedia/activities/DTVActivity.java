@@ -20,7 +20,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.iwedia.dtv.DVBManager;
-import com.iwedia.dtv.DVBStatusCallBack;
+import com.iwedia.dtv.DVBManager.DVBStatus;
 import com.iwedia.dtv.IPService;
 import com.iwedia.zapp.R;
 
@@ -39,7 +39,7 @@ import java.util.ArrayList;
  * service through dtv manager object.
  */
 public abstract class DTVActivity extends Activity {
-    public static final String TAG = "DTVExample-Channel Zapp";
+    public static final String TAG = "A4TV-Example1";
     public static final String FINISH_ACTIVITIES_MESSAGE = "activity_finish";
     private static final String LAST_WATCHED_CHANNEL_INDEX = "last_watched";
     public static final String EXTERNAL_MEDIA_PATH = "/mnt/media/";
@@ -61,7 +61,7 @@ public abstract class DTVActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         /** Creates dtv manager object and connects it to service. */
         mDVBManager = DVBManager.getInstance();
-        mDVBManager.setDVBStatusCallBack(mDvbStatusCallBack);
+        mDVBManager.setDVBStatus(mDvbStatusCallBack);
         initializeIpChannels();
     }
 
@@ -200,7 +200,7 @@ public abstract class DTVActivity extends Activity {
     /**
      * DVB CallBack.
      */
-    private DVBStatusCallBack mDvbStatusCallBack = new DVBStatusCallBack() {
+    private DVBStatus mDvbStatusCallBack = new DVBStatus() {
         @Override
         public void channelIsScrambled() {
             Toast.makeText(getApplicationContext(), R.string.scrambled,
