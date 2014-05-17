@@ -47,9 +47,18 @@ public class DVBManager {
     /** IP stuff */
     private int mCurrentChannelNumberIp = -1;
     private boolean ipAndSomeOtherTunerType = false;
+    /** DVB Manager Instance. */
     private static DVBManager sInstance = null;
     /** CallBack for UI. */
-    private DVBStatusCallBack mDVBStatusCallBack = null;
+    private DVBStatus mDVBStatus = null;
+
+    /**
+     * CallBack for currently DVB status.
+     */
+    public interface DVBStatus {
+        /** Alert UI that channel is scrambled. */
+        public void channelIsScrambled();
+    }
 
     public static DVBManager getInstance() {
         if (sInstance == null) {
@@ -171,7 +180,7 @@ public class DVBManager {
     }
 
     /**
-     * * Start MW video playback.
+     * Start MW video playback.
      * 
      * @param channelNumber
      * @return Channel Info.
@@ -292,7 +301,7 @@ public class DVBManager {
                                     : channelNumber);
             /** Channel is Scrambled Toast. */
             if (desiredService.isScrambled()) {
-                mDVBStatusCallBack.channelIsScrambled();
+                mDVBStatus.channelIsScrambled();
             }
             int route = getActiveRouteByServiceType(desiredService
                     .getSourceType());
@@ -434,9 +443,9 @@ public class DVBManager {
     }
 
     /**
-     * Set DVB CallBack.
+     * Set DVB Status Instance.
      */
-    public void setDVBStatusCallBack(DVBStatusCallBack dvbStatusCallBack) {
-        mDVBStatusCallBack = dvbStatusCallBack;
+    public void setDVBStatus(DVBStatus dvbStatus) {
+        mDVBStatus = dvbStatus;
     }
 }
