@@ -56,6 +56,7 @@ public class ChannelListActivity extends DTVActivity implements
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         try {
             mDVBManager.changeChannelByNumber(position);
+            finish();
         } catch (InternalException e) {
             /** Error with service connection. */
             finishActivity();

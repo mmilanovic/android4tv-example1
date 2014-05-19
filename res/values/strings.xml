@@ -17,4 +17,5 @@
 <resources>
     <string name="app_name">A4TV Example 1</string>
     <string name="scrambled">Channel is Scrambled</string>
+    <string name="load_ip_channel">Load IP channel list from USB</string>
 </resources>
