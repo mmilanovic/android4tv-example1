@@ -468,7 +468,7 @@ public class DVBManager {
                             mEPGFilterID, channelNumber,
                             EpgEventType.FOLLOWING_EVENT));
         }
-        /** Return IP channel. */
+        /** Return IP  channel. */
         else {
             return new ChannelInfo(channelNumber + 1, DTVActivity.sIpChannels
                     .get(channelNumber - numberOfDtvChannels).getName(), null,
