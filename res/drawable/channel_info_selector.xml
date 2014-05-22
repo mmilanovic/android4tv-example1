@@ -14,13 +14,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<resources>
-    <string name="app_name">A4TV Example 1</string>
-    <string name="scrambled">Channel is Scrambled</string>
-    <string name="active">Channel is Already Active</string>
-    <string name="load_ip_channel">Load IP channel list from USB</string>
-    <string name="no_antenna">No Antenna Connected</string>
-    <string name="epg_now">Now: %1$s</string>
-    <string name="epg_next">Next: %1$s</string>
-    <string name="parental">%1$s+</string>
-</resources>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape android:shape="rectangle">
+            <stroke android:width="@dimen/padding_channel_change" android:color="#FFFFFFFF"/>
+            <solid android:color="#CC000000"/>
+        </shape></item>
+</selector>

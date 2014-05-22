@@ -11,7 +11,7 @@
 package com.iwedia.activities;
 
 import android.content.ContextWrapper;
-import android.content.Intent;
+import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnErrorListener;
 import android.net.Uri;
@@ -19,22 +19,28 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.iwedia.dtv.ChannelInfo;
+import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.IPService;
 import com.iwedia.dtv.types.InternalException;
+import com.iwedia.dtv.types.TimeDate;
 import com.iwedia.zapp.R;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * TVActivity - Activity for Watching Channels.
@@ -42,38 +48,58 @@ import java.util.ArrayList;
 public class TVActivity extends DTVActivity {
     public static final String TAG = "TVActivity";
     /** Channel Number/Name View Duration in Milliseconds. */
-    private static final int CHANNEL_VIEW_DURATION = 3000;
+    private static final int CHANNEL_VIEW_DURATION = 5000;
     /** Numeric Channel Change 'Wait' Duration. */
     private static final int NUMERIC_CHANNEL_CHANGE_DURATION = 2000;
     /** Maximum Length of Numeric Buffer. */
     private static final int MAX_CHANNEL_NUMBER_LENGTH = 4;
     /** URI For VideoView. */
     public static final String TV_URI = "tv://";
+    /** Time and Date Format */
+    private SimpleDateFormat mTimeFormat = null;
+    private SimpleDateFormat mDateFormat = null;
     /** Views needed in activity. */
-    private LinearLayout mChannelContainer = null;
+    private RelativeLayout mChannelInfoContainer = null;
+    private RelativeLayout mNowNextContainer = null;
     private TextView mChannelNumber = null;
     private TextView mChannelName = null;
+    private TextView mEPGNow = null;
+    private TextView mEPGNext = null;
+    private TextView mEPGStartTime = null;
+    private TextView mEPGEndTime = null;
+    private TextView mEPGTime = null;
+    private TextView mEPGDate = null;
+    private TextView mEPGParental = null;
+    private ProgressBar mProgressBarNow = null;
     /** Handler for sending action messages to update UI. */
     private UiHandler mHandler = null;
     /** Buffer for Channel Index, Numeric Channel Change. */
     private StringBuilder mBufferedChannelIndex = null;
-    /** Current Channel Info */
+    /** Current Channel Info. */
     private ChannelInfo mChannelInfo = null;
+    /** Channel List Dialog. */
+    private ChannelListDialog mChannelListDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tv_activity);
+        mWarningLayout = (RelativeLayout) findViewById(R.id.relativelayout_warning);
         /** Initialize VideoView. */
         initializeVideoView();
         /** Initialize Channel Container. */
         initializeChannelContainer();
+        /** Initialize Present/Following View. */
+        initializeEPGNowNextView();
         /** Load default IP channel list. */
         initIpChannels();
         /** Initialize Handler. */
         mHandler = new UiHandler();
         /** Initialize String Builder */
         mBufferedChannelIndex = new StringBuilder();
+        /** Initialize Time and Date Format. */
+        mTimeFormat = new SimpleDateFormat("HH:mm");
+        mDateFormat = new SimpleDateFormat("dd/MM/yyyy");
         /** Start DTV. */
         try {
             mChannelInfo = mDVBManager.startDTV(getLastWatchedChannelIndex());
@@ -157,10 +183,38 @@ public class TVActivity extends DTVActivity {
      * Initialize LinearLayout and TextViews.
      */
     private void initializeChannelContainer() {
-        mChannelContainer = (LinearLayout) findViewById(R.id.linearlayout_channel_container);
-        mChannelContainer.setVisibility(View.GONE);
+        mChannelInfoContainer = (RelativeLayout) findViewById(R.id.linearlayout_channel_info_container);
+        mChannelInfoContainer.setVisibility(View.GONE);
         mChannelNumber = (TextView) findViewById(R.id.textview_channel_number);
         mChannelName = (TextView) findViewById(R.id.textview_channel_name);
+    }
+
+    /**
+     * Initialize View for Present/Following.
+     */
+    private void initializeEPGNowNextView() {
+        mNowNextContainer = (RelativeLayout) findViewById(R.id.relativelayout_now_next);
+        mEPGNow = (TextView) findViewById(R.id.textview_now);
+        mEPGNext = (TextView) findViewById(R.id.textview_next);
+        mEPGStartTime = (TextView) findViewById(R.id.textview_start_time);
+        mEPGEndTime = (TextView) findViewById(R.id.textview_end_time);
+        mEPGTime = (TextView) findViewById(R.id.textview_time);
+        mEPGDate = (TextView) findViewById(R.id.textview_date);
+        mEPGParental = (TextView) findViewById(R.id.textview_parental);
+        mProgressBarNow = (ProgressBar) findViewById(R.id.progressbar_now);
+    }
+
+    /** Initialize Channel List Dialog. */
+    private ChannelListDialog getChannelListDialog() {
+        if (mChannelListDialog == null) {
+            Display display = getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            mChannelListDialog = new ChannelListDialog(this, mDVBManager,
+                    size.x, size.y);
+            Log.i(TAG, "Size: " + size.x + "x" + size.y);
+        }
+        return mChannelListDialog;
     }
 
     /**
@@ -168,15 +222,55 @@ public class TVActivity extends DTVActivity {
      * 
      * @param channelInfo
      */
-    private void showChannelInfo(ChannelInfo channelInfo) {
+    public void showChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
+            /** Save Current Instance. */
             mChannelInfo = channelInfo;
+            /** Prepare Views. */
             mChannelNumber.setText(String.valueOf(channelInfo.getNumber()));
             mChannelName.setText(channelInfo.getName());
-            mChannelContainer.setVisibility(View.VISIBLE);
+            if (channelInfo.getParental().equals("")) {
+                mEPGParental.setVisibility(View.GONE);
+            } else {
+                mEPGParental.setText(getResources().getString(
+                        R.string.parental, channelInfo.getParental()));
+                mEPGParental.setVisibility(View.VISIBLE);
+            }
+            if (!channelInfo.getEPGNow().equals("")
+                    || !channelInfo.getEPGNext().equals("")) {
+                if (channelInfo.getProgressPercentPassed() != -1) {
+                    mProgressBarNow.setProgress(channelInfo
+                            .getProgressPercentPassed());
+                    mProgressBarNow.setVisibility(View.VISIBLE);
+                } else {
+                    mProgressBarNow.setVisibility(View.INVISIBLE);
+                }
+                mEPGNow.setText(getResources().getString(R.string.epg_now,
+                        channelInfo.getEPGNow()));
+                mEPGNext.setText(getResources().getString(R.string.epg_next,
+                        channelInfo.getEPGNext()));
+                mEPGStartTime.setText(getTime(channelInfo.getStartTime()));
+                mEPGEndTime.setText(getTime(channelInfo.getEndTime()));
+                mNowNextContainer.setVisibility(View.VISIBLE);
+            } else {
+                mNowNextContainer.setVisibility(View.GONE);
+            }
+            try {
+                TimeDate lCurrentTime = DVBManager.getInstance()
+                        .getCurrentTimeDate();
+                mEPGDate.setText(getDate(lCurrentTime.getCalendar().getTime()));
+                mEPGTime.setText(getTime(lCurrentTime.getCalendar().getTime()));
+            } catch (InternalException e) {
+                Log.w(TAG, "There was an Internal Error.", e);
+            }
+            mChannelInfoContainer.setVisibility(View.VISIBLE);
+            /** Handle Messages. */
             mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
             mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_VIEW_MESSAGE,
                     CHANNEL_VIEW_DURATION);
+        } else {
+            mChannelInfoContainer.setVisibility(View.INVISIBLE);
+            mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
         }
     }
 
@@ -195,7 +289,7 @@ public class TVActivity extends DTVActivity {
         /** Show Index and Change Channel */
         mChannelNumber.setText(mBufferedChannelIndex.toString());
         mChannelName.setText("");
-        mChannelContainer.setVisibility(View.VISIBLE);
+        mChannelInfoContainer.setVisibility(View.VISIBLE);
         mHandler.removeMessages(UiHandler.NUMERIC_CHANNEL_CHANGE);
         mHandler.sendEmptyMessageDelayed(UiHandler.NUMERIC_CHANNEL_CHANGE,
                 NUMERIC_CHANNEL_CHANGE_DURATION);
@@ -211,8 +305,7 @@ public class TVActivity extends DTVActivity {
         /** Open Channel List. */
             case KeyEvent.KEYCODE_DPAD_CENTER:
             case KeyEvent.KEYCODE_ENTER: {
-                startActivity(new Intent(getApplicationContext(),
-                        ChannelListActivity.class));
+                getChannelListDialog().show();
                 return true;
             }
             /**
@@ -263,6 +356,11 @@ public class TVActivity extends DTVActivity {
                 showChannelNumber(generateChannelNumber(keyCode));
                 return true;
             }
+            /** Open Channel Info. */
+            case KeyEvent.KEYCODE_INFO: {
+                showChannelInfo(mChannelInfo);
+                return true;
+            }
             default: {
                 return super.onKeyDown(keyCode, event);
             }
@@ -304,6 +402,33 @@ public class TVActivity extends DTVActivity {
     }
 
     /**
+     * Convert Formated Time in String.
+     */
+    private String getTime(Date date) {
+        if (date != null) {
+            return mTimeFormat.format(date);
+        }
+        return "";
+    }
+
+    /**
+     * Convert Formated Date in String.
+     */
+    private String getDate(Date date) {
+        if (date != null) {
+            return mDateFormat.format(date);
+        }
+        return "";
+    }
+
+    /**
+     * Get Current Channel Info.
+     */
+    public ChannelInfo getChannelInfo() {
+        return mChannelInfo;
+    }
+
+    /**
      * Handler for sending action messages to update UI.
      */
     private class UiHandler extends Handler {
@@ -316,7 +441,7 @@ public class TVActivity extends DTVActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case HIDE_VIEW_MESSAGE: {
-                    mChannelContainer.setVisibility(View.INVISIBLE);
+                    mChannelInfoContainer.setVisibility(View.INVISIBLE);
                     break;
                 }
                 case NUMERIC_CHANNEL_CHANGE: {
@@ -327,6 +452,7 @@ public class TVActivity extends DTVActivity {
                             && lChannelNumber <= mDVBManager
                                     .getChannelListSize()) {
                         lChannelNumber--;
+                        /** Check for Same Channel. */
                         try {
                             lChannelInfo = mDVBManager
                                     .changeChannelByNumber(lChannelNumber);

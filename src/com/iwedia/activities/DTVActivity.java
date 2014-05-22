@@ -14,13 +14,21 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.DVBManager.DVBStatus;
+import com.iwedia.dtv.types.InternalException;
 import com.iwedia.dtv.IPService;
 import com.iwedia.zapp.R;
 
@@ -44,11 +52,18 @@ public abstract class DTVActivity extends Activity {
     private static final String LAST_WATCHED_CHANNEL_INDEX = "last_watched";
     public static final String EXTERNAL_MEDIA_PATH = "/mnt/media/";
     public static final String IP_CHANNELS = "ip_service_list.txt";
+    private static final int MESSAGE_ANTENA_LAYOUT = 0;
     private static DTVActivity sInstance = null;
     /** List of IP channels. */
     public static ArrayList<IPService> sIpChannels = null;
     /** DVB manager instance. */
     protected DVBManager mDVBManager = null;
+    /** Warning Layout. */
+    protected RelativeLayout mWarningLayout = null;
+    /** Antenna Connection Status */
+    private boolean mAntennaStatus = true;
+    /** Scrambled Status */
+    private boolean mScrambledStatus = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +74,17 @@ public abstract class DTVActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().clearFlags(
                 WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-        /** Creates dtv manager object and connects it to service. */
-        mDVBManager = DVBManager.getInstance();
+        getWindow().setFormat(PixelFormat.RGBA_8888);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DITHER);
+        getWindow().getDecorView().getBackground().setDither(true);
+        /** Creates DTV manager object and connects it to service. */
+        try {
+            mDVBManager = DVBManager.getInstance();
+        } catch (InternalException e) {
+            Log.e(TAG, "There was an error in initializing DVB Manager", e);
+            finish();
+        }
+        mDVBManager.registerCallBacks();
         mDVBManager.setDVBStatus(mDvbStatusCallBack);
         initializeIpChannels();
     }
@@ -197,14 +221,64 @@ public abstract class DTVActivity extends Activity {
         }
     }
 
+    /** Handler */
+    private Handler mHandler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+            switch (msg.what) {
+                case MESSAGE_ANTENA_LAYOUT: {
+                    if (mAntennaStatus) {
+                        if (mScrambledStatus) {
+                            ((TextView) mWarningLayout
+                                    .findViewById(R.id.textview_warning))
+                                    .setText(R.string.scrambled);
+                        } else {
+                            mWarningLayout.setVisibility(View.INVISIBLE);
+                        }
+                    } else {
+                        ((TextView) mWarningLayout
+                                .findViewById(R.id.textview_warning))
+                                .setText(R.string.no_antenna);
+                        mWarningLayout.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
+    };
     /**
      * DVB CallBack.
      */
     private DVBStatus mDvbStatusCallBack = new DVBStatus() {
         @Override
-        public void channelIsScrambled() {
-            Toast.makeText(getApplicationContext(), R.string.scrambled,
+        public void channelIsScrambled(boolean status) {
+            mScrambledStatus = status;
+            if (status) {
+                ((TextView) mWarningLayout.findViewById(R.id.textview_warning))
+                        .setText(R.string.scrambled);
+                mWarningLayout.setVisibility(View.VISIBLE);
+            } else {
+                if (mAntennaStatus) {
+                    mWarningLayout.setVisibility(View.INVISIBLE);
+                } else {
+                    ((TextView) mWarningLayout
+                            .findViewById(R.id.textview_warning))
+                            .setText(R.string.no_antenna);
+                }
+            }
+        }
+
+        @Override
+        public void zappingOnSameCahnnel() {
+            Toast.makeText(getApplicationContext(), R.string.active,
                     Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void antennaConnected(boolean status) {
+            mAntennaStatus = status;
+            Message.obtain(mHandler, MESSAGE_ANTENA_LAYOUT).sendToTarget();
         }
     };
 }
