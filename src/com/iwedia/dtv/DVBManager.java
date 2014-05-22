@@ -89,6 +89,7 @@ public class DVBManager {
 
     /**
      * Initialize Service.
+     * 
      * @throws InternalException
      */
     private void InitializeDTVService() throws InternalException {
@@ -176,8 +177,6 @@ public class DVBManager {
                 && (mLiveRouteCab != -1 || mLiveRouteSat != -1 || mLiveRouteTer != -1)) {
             ipAndSomeOtherTunerType = true;
         }
-        Log.d(TAG, "mLiveRouteTer=" + mLiveRouteTer + ", mLiveRouteCab="
-                + mLiveRouteCab + ", mLiveRouteIp=" + mLiveRouteIp);
     }
 
     /**
@@ -427,6 +426,7 @@ public class DVBManager {
                 channelNames.add(DTVActivity.sIpChannels.get(i).getName());
             }
         }
+        Log.d(TAG, "Channels " + channelNames.toString());
         return channelNames;
     }
 
