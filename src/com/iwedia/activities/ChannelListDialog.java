@@ -10,35 +10,53 @@
  */
 package com.iwedia.activities;
 
-import android.os.Bundle;
+import android.app.Dialog;
+import android.graphics.PixelFormat;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 import com.iwedia.adapters.ChannelListAdapter;
+import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.zapp.R;
 
 /**
  * Channel List Activity.
  */
-public class ChannelListActivity extends DTVActivity implements
-        OnItemClickListener {
+public class ChannelListDialog extends Dialog implements OnItemClickListener {
     public static final String TAG = "ChannelListActivity";
-    private GridView mChannelList;
+    private GridView mChannelList = null;
+    private TVActivity mActivity = null;
+    private DVBManager mDVBManager = null;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.channel_list_activity);
+    public ChannelListDialog(TVActivity activity, DVBManager dvbManager,
+            int width, int height) {
+        super(activity, R.style.DialogTransparent);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        // Hide Status Bar of Android.
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        getWindow().setFormat(PixelFormat.RGBA_8888);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DITHER);
+        setContentView(R.layout.channel_list_dialog);
+        getWindow().getAttributes().width = width;
+        getWindow().getAttributes().height = height;
+        mActivity = activity;
+        mDVBManager = dvbManager;
         /** Initialize GridView. */
         initializeChannelList();
-        mChannelList.setAdapter(new ChannelListAdapter(this, mDVBManager
+        mChannelList.setAdapter(new ChannelListAdapter(activity, dvbManager
                 .getChannelNames()));
-        mChannelList.setSelection(mDVBManager.getCurrentChannelNumber());
+        mChannelList.setSelection(dvbManager.getCurrentChannelNumber());
     }
 
     /**
@@ -53,13 +71,20 @@ public class ChannelListActivity extends DTVActivity implements
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        mActivity.showChannelInfo(mActivity.getChannelInfo());
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         try {
-            mDVBManager.changeChannelByNumber(position);
-            finish();
+            cancel();
+            mActivity.showChannelInfo(mDVBManager
+                    .changeChannelByNumber(position));
         } catch (InternalException e) {
             /** Error with service connection. */
-            finishActivity();
+            mActivity.finishActivity();
         } catch (IllegalArgumentException e) {
             Log.e(TAG,
                     "Error with adapter data when trying to change channel!", e);
