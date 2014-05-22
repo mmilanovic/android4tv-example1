@@ -85,6 +85,7 @@ public class DVBManager {
     private DVBManager() throws InternalException {
         mDTVManager = new DTVManager();
         InitializeDTVService();
+        
     }
 
     /**
