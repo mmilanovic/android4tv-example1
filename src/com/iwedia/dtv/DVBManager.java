@@ -11,6 +11,7 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
 import com.iwedia.dtv.dtvmanager.DTVManager;
@@ -159,6 +160,8 @@ public class DVBManager {
                 && (mLiveRouteCab != -1 || mLiveRouteSat != -1 || mLiveRouteTer != -1)) {
             ipAndSomeOtherTunerType = true;
         }
+        Log.d(TAG, "mLiveRouteTer=" + mLiveRouteTer + ", mLiveRouteCab="
+                + mLiveRouteCab + ", mLiveRouteIp=" + mLiveRouteIp);
     }
 
     /**
@@ -207,7 +210,8 @@ public class DVBManager {
                 route = getActiveRouteByServiceType(desiredService
                         .getSourceType());
                 int numberOfDtvChannels = getChannelListSize()
-                        - DTVActivity.sIpChannels.size();
+                        - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels
+                                .size());
                 /** Regular DVB channel. */
                 if (channelNumber < numberOfDtvChannels) {
                     mCurrentLiveRoute = route;
@@ -291,7 +295,7 @@ public class DVBManager {
         channelNumber = (channelNumber + getChannelListSize())
                 % getChannelListSize();
         int numberOfDtvChannels = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
         /** For regular DVB channel. */
         if (channelNumber < numberOfDtvChannels) {
             ServiceDescriptor desiredService = mDTVManager.getServiceControl()
@@ -379,11 +383,17 @@ public class DVBManager {
         ArrayList<String> channelNames = new ArrayList<String>();
         String channelName = "";
         int channelListSize = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
+        Log.d(TAG,
+                "getChannelListSize(): " + getChannelListSize()
+                        + ", DTVActivity.sIpChannels.size() "
+                        + DTVActivity.sIpChannels.size());
+        Log.d(TAG, "channelListSize " + channelListSize);
         IServiceControl serviceControl = mDTVManager.getServiceControl();
         /** If there is IP first element in service list is DUMMY */
         channelListSize = ipAndSomeOtherTunerType ? channelListSize + 1
                 : channelListSize;
+        Log.d(TAG, "channelListSize " + channelListSize);
         for (int i = ipAndSomeOtherTunerType ? 1 : 0; i < channelListSize; i++) {
             channelName = serviceControl.getServiceDescriptor(
                     mCurrentListIndex, i).getName();
@@ -395,6 +405,7 @@ public class DVBManager {
                 channelNames.add(DTVActivity.sIpChannels.get(i).getName());
             }
         }
+        Log.d(TAG, "CHANNELS " + channelNames.toString());
         return channelNames;
     }
 
@@ -424,7 +435,7 @@ public class DVBManager {
                     + channelNumber + ", List size is: " + getChannelListSize());
         }
         int numberOfDtvChannels = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
         /** Return DTV channel. */
         if (channelNumber < numberOfDtvChannels) {
             String channelName = mDTVManager
