@@ -28,8 +28,8 @@ import android.widget.Toast;
 
 import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.DVBManager.DVBStatus;
-import com.iwedia.dtv.types.InternalException;
 import com.iwedia.dtv.IPService;
+import com.iwedia.dtv.types.InternalException;
 import com.iwedia.zapp.R;
 
 import java.io.BufferedReader;

@@ -11,13 +11,11 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
 import com.iwedia.callbacks.ScanCallBack;
 import com.iwedia.dtv.dtvmanager.DTVManager;
 import com.iwedia.dtv.dtvmanager.IDTVManager;
-import com.iwedia.dtv.epg.EpgEvent;
 import com.iwedia.dtv.epg.EpgEventType;
 import com.iwedia.dtv.route.broadcast.IBroadcastRouteControl;
 import com.iwedia.dtv.route.broadcast.RouteDemuxDescriptor;
@@ -176,8 +174,6 @@ public class DVBManager {
                 && (mLiveRouteCab != -1 || mLiveRouteSat != -1 || mLiveRouteTer != -1)) {
             ipAndSomeOtherTunerType = true;
         }
-        Log.d(TAG, "mLiveRouteTer=" + mLiveRouteTer + ", mLiveRouteCab="
-                + mLiveRouteCab + ", mLiveRouteIp=" + mLiveRouteIp);
     }
 
     /**
@@ -415,7 +411,6 @@ public class DVBManager {
         /** If there is IP first element in service list is DUMMY */
         channelListSize = ipAndSomeOtherTunerType ? channelListSize + 1
                 : channelListSize;
-        Log.d(TAG, "channelListSize " + channelListSize);
         for (int i = ipAndSomeOtherTunerType ? 1 : 0; i < channelListSize; i++) {
             channelName = serviceControl.getServiceDescriptor(
                     mCurrentListIndex, i).getName();
@@ -427,7 +422,6 @@ public class DVBManager {
                 channelNames.add(DTVActivity.sIpChannels.get(i).getName());
             }
         }
-        Log.d(TAG, "Channels " + channelNames.toString());
         return channelNames;
     }
 
