@@ -184,7 +184,7 @@ public class TVActivity extends DTVActivity {
      */
     private void initializeChannelContainer() {
         mChannelInfoContainer = (RelativeLayout) findViewById(R.id.linearlayout_channel_info_container);
-        mChannelInfoContainer.setVisibility(View.GONE);
+        mChannelInfoContainer.setVisibility(View.INVISIBLE);
         mChannelNumber = (TextView) findViewById(R.id.textview_channel_number);
         mChannelName = (TextView) findViewById(R.id.textview_channel_name);
     }
@@ -212,7 +212,6 @@ public class TVActivity extends DTVActivity {
             display.getSize(size);
             mChannelListDialog = new ChannelListDialog(this, mDVBManager,
                     size.x, size.y);
-            Log.i(TAG, "Size: " + size.x + "x" + size.y);
         }
         return mChannelListDialog;
     }
@@ -222,15 +221,14 @@ public class TVActivity extends DTVActivity {
      * 
      * @param channelInfo
      */
-    public void showChannelInfo() {
-        ChannelInfo channelInfo = mDVBManager.getChannelInfo(mDVBManager
-                .getCurrentChannelNumber());
+    @Override
+    public void showChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
             /** Prepare Views. */
             mChannelNumber.setText(String.valueOf(channelInfo.getNumber()));
             mChannelName.setText(channelInfo.getName());
             if (channelInfo.getParental().equals("")) {
-                mEPGParental.setVisibility(View.GONE);
+                mEPGParental.setVisibility(View.INVISIBLE);
             } else {
                 mEPGParental.setText(getResources().getString(
                         R.string.parental, channelInfo.getParental()));
@@ -253,7 +251,7 @@ public class TVActivity extends DTVActivity {
                 mEPGEndTime.setText(getTime(channelInfo.getEndTime()));
                 mNowNextContainer.setVisibility(View.VISIBLE);
             } else {
-                mNowNextContainer.setVisibility(View.GONE);
+                mNowNextContainer.setVisibility(View.INVISIBLE);
             }
             try {
                 TimeDate lCurrentTime = DVBManager.getInstance()
@@ -289,6 +287,8 @@ public class TVActivity extends DTVActivity {
         /** Show Index and Change Channel */
         mChannelNumber.setText(mBufferedChannelIndex.toString());
         mChannelName.setText("");
+        mNowNextContainer.setVisibility(View.INVISIBLE);
+        mEPGParental.setVisibility(View.INVISIBLE);
         mChannelInfoContainer.setVisibility(View.VISIBLE);
         mHandler.removeMessages(UiHandler.NUMERIC_CHANNEL_CHANGE);
         mHandler.sendEmptyMessageDelayed(UiHandler.NUMERIC_CHANNEL_CHANGE,
@@ -315,8 +315,7 @@ public class TVActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F4:
             case KeyEvent.KEYCODE_CHANNEL_UP: {
                 try {
-                    mDVBManager.changeChannelUp();
-                    showChannelInfo();
+                    showChannelInfo(mDVBManager.changeChannelUp());
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
@@ -334,8 +333,7 @@ public class TVActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F3:
             case KeyEvent.KEYCODE_CHANNEL_DOWN: {
                 try {
-                    mDVBManager.changeChannelDown();
-                    showChannelInfo();
+                    showChannelInfo(mDVBManager.changeChannelDown());
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
@@ -360,7 +358,8 @@ public class TVActivity extends DTVActivity {
             }
             /** Open Channel Info. */
             case KeyEvent.KEYCODE_INFO: {
-                showChannelInfo();
+                showChannelInfo(mDVBManager.getChannelInfo(
+                        mDVBManager.getCurrentChannelNumber(), false));
                 return true;
             }
             default: {
@@ -442,20 +441,27 @@ public class TVActivity extends DTVActivity {
                 case NUMERIC_CHANNEL_CHANGE: {
                     int lChannelNumber = Integer.valueOf(mBufferedChannelIndex
                             .toString());
+                    ChannelInfo lChannelInfo = mDVBManager.getChannelInfo(
+                            mDVBManager.getCurrentChannelNumber(), false);
                     if (lChannelNumber > 0
                             && lChannelNumber <= mDVBManager
                                     .getChannelListSize()) {
                         lChannelNumber--;
                         /** Check for Same Channel. */
                         try {
-                            mDVBManager.changeChannelByNumber(lChannelNumber);
+                            lChannelInfo = mDVBManager
+                                    .changeChannelByNumber(lChannelNumber);
                         } catch (InternalException e) {
                             Log.e(TAG,
                                     "There was an Internal Execption on Change Channel.",
                                     e);
                         }
+                    } else {
+                        Toast.makeText(TVActivity.this,
+                                R.string.non_existing_channel,
+                                Toast.LENGTH_SHORT).show();
                     }
-                    showChannelInfo();
+                    showChannelInfo(lChannelInfo);
                     /** Flush Channel Buffer */
                     mBufferedChannelIndex.delete(0,
                             mBufferedChannelIndex.length());

@@ -26,6 +26,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iwedia.dtv.ChannelInfo;
 import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.DVBManager.DVBStatus;
 import com.iwedia.dtv.IPService;
@@ -53,6 +54,7 @@ public abstract class DTVActivity extends Activity {
     public static final String EXTERNAL_MEDIA_PATH = "/mnt/media/";
     public static final String IP_CHANNELS = "ip_service_list.txt";
     private static final int MESSAGE_ANTENA_LAYOUT = 0;
+    private static final int MESSAGE_UPDATE_NOW_NEXT = 1;
     private static DTVActivity sInstance = null;
     /** List of IP channels. */
     public static ArrayList<IPService> sIpChannels = null;
@@ -221,6 +223,13 @@ public abstract class DTVActivity extends Activity {
         }
     }
 
+    /**
+     * Show Channel Name and Number of Current Channel on Channel Change.
+     * 
+     * @param channelInfo
+     */
+    public abstract void showChannelInfo(ChannelInfo channelInfo);
+
     /** Handler */
     private Handler mHandler = new Handler() {
         public void handleMessage(android.os.Message msg) {
@@ -240,6 +249,11 @@ public abstract class DTVActivity extends Activity {
                                 .setText(R.string.no_antenna);
                         mWarningLayout.setVisibility(View.VISIBLE);
                     }
+                    break;
+                }
+                case MESSAGE_UPDATE_NOW_NEXT: {
+                    showChannelInfo(mDVBManager.getChannelInfo(
+                            mDVBManager.getCurrentChannelNumber(), false));
                     break;
                 }
                 default:
@@ -279,6 +293,11 @@ public abstract class DTVActivity extends Activity {
         public void antennaConnected(boolean status) {
             mAntennaStatus = status;
             Message.obtain(mHandler, MESSAGE_ANTENA_LAYOUT).sendToTarget();
+        }
+
+        @Override
+        public void updateNowNext() {
+            Message.obtain(mHandler, MESSAGE_UPDATE_NOW_NEXT).sendToTarget();
         }
     };
 }
