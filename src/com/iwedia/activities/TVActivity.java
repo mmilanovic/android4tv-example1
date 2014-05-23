@@ -76,7 +76,7 @@ public class TVActivity extends DTVActivity {
     /** Buffer for Channel Index, Numeric Channel Change. */
     private StringBuilder mBufferedChannelIndex = null;
     /** Current Channel Info. */
-    private ChannelInfo mChannelInfo = null;
+    // private ChannelInfo mChannelInfo = null;
     /** Channel List Dialog. */
     private ChannelListDialog mChannelListDialog = null;
 
@@ -102,7 +102,7 @@ public class TVActivity extends DTVActivity {
         mDateFormat = new SimpleDateFormat("dd/MM/yyyy");
         /** Start DTV. */
         try {
-            mChannelInfo = mDVBManager.startDTV(getLastWatchedChannelIndex());
+            mDVBManager.startDTV(getLastWatchedChannelIndex());
         } catch (IllegalArgumentException e) {
             Toast.makeText(
                     this,
@@ -222,10 +222,10 @@ public class TVActivity extends DTVActivity {
      * 
      * @param channelInfo
      */
-    public void showChannelInfo(ChannelInfo channelInfo) {
+    public void showChannelInfo() {
+        ChannelInfo channelInfo = mDVBManager.getChannelInfo(mDVBManager
+                .getCurrentChannelNumber());
         if (channelInfo != null) {
-            /** Save Current Instance. */
-            mChannelInfo = channelInfo;
             /** Prepare Views. */
             mChannelNumber.setText(String.valueOf(channelInfo.getNumber()));
             mChannelName.setText(channelInfo.getName());
@@ -315,7 +315,8 @@ public class TVActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F4:
             case KeyEvent.KEYCODE_CHANNEL_UP: {
                 try {
-                    showChannelInfo(mDVBManager.changeChannelUp());
+                    mDVBManager.changeChannelUp();
+                    showChannelInfo();
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
@@ -333,7 +334,8 @@ public class TVActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F3:
             case KeyEvent.KEYCODE_CHANNEL_DOWN: {
                 try {
-                    showChannelInfo(mDVBManager.changeChannelDown());
+                    mDVBManager.changeChannelDown();
+                    showChannelInfo();
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
@@ -358,7 +360,7 @@ public class TVActivity extends DTVActivity {
             }
             /** Open Channel Info. */
             case KeyEvent.KEYCODE_INFO: {
-                showChannelInfo(mChannelInfo);
+                showChannelInfo();
                 return true;
             }
             default: {
@@ -422,13 +424,6 @@ public class TVActivity extends DTVActivity {
     }
 
     /**
-     * Get Current Channel Info.
-     */
-    public ChannelInfo getChannelInfo() {
-        return mChannelInfo;
-    }
-
-    /**
      * Handler for sending action messages to update UI.
      */
     private class UiHandler extends Handler {
@@ -447,22 +442,20 @@ public class TVActivity extends DTVActivity {
                 case NUMERIC_CHANNEL_CHANGE: {
                     int lChannelNumber = Integer.valueOf(mBufferedChannelIndex
                             .toString());
-                    ChannelInfo lChannelInfo = mChannelInfo;
                     if (lChannelNumber > 0
                             && lChannelNumber <= mDVBManager
                                     .getChannelListSize()) {
                         lChannelNumber--;
                         /** Check for Same Channel. */
                         try {
-                            lChannelInfo = mDVBManager
-                                    .changeChannelByNumber(lChannelNumber);
+                            mDVBManager.changeChannelByNumber(lChannelNumber);
                         } catch (InternalException e) {
                             Log.e(TAG,
                                     "There was an Internal Execption on Change Channel.",
                                     e);
                         }
                     }
-                    showChannelInfo(lChannelInfo);
+                    showChannelInfo();
                     /** Flush Channel Buffer */
                     mBufferedChannelIndex.delete(0,
                             mBufferedChannelIndex.length());

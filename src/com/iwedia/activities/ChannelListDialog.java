@@ -73,15 +73,15 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        mActivity.showChannelInfo(mActivity.getChannelInfo());
+        mActivity.showChannelInfo();
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         try {
             cancel();
-            mActivity.showChannelInfo(mDVBManager
-                    .changeChannelByNumber(position));
+            mDVBManager.changeChannelByNumber(position);
+            mActivity.showChannelInfo();
         } catch (InternalException e) {
             /** Error with service connection. */
             mActivity.finishActivity();

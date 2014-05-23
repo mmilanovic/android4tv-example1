@@ -11,6 +11,7 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
 import com.iwedia.callbacks.ScanCallBack;
@@ -203,8 +204,8 @@ public class DVBManager {
      * @throws IllegalArgumentException
      * @throws InternalException
      */
-    public ChannelInfo startDTV(int channelNumber)
-            throws IllegalArgumentException, InternalException {
+    public void startDTV(int channelNumber) throws IllegalArgumentException,
+            InternalException {
         if (channelNumber < 0 || channelNumber >= getChannelListSize()) {
             throw new IllegalArgumentException("Illegal channel index!");
         }
@@ -213,7 +214,7 @@ public class DVBManager {
         int route = getActiveRouteByServiceType(desiredService.getSourceType());
         /** Wrong route. */
         if (route == -1 && mLiveRouteIp == -1) {
-            return null;
+            return;
         } else {
             /** There is IP and DVB. */
             if (ipAndSomeOtherTunerType) {
@@ -256,7 +257,6 @@ public class DVBManager {
                         mCurrentListIndex, channelNumber);
             }
         }
-        return getChannelInfo(channelNumber);
     }
 
     /**
@@ -284,9 +284,9 @@ public class DVBManager {
      * @throws InternalException
      * @throws IllegalArgumentException
      */
-    public ChannelInfo changeChannelUp() throws IllegalArgumentException,
+    public void changeChannelUp() throws IllegalArgumentException,
             InternalException {
-        return changeChannelByNumber((getCurrentChannelNumber() + 1)
+        changeChannelByNumber((getCurrentChannelNumber() + 1)
                 % (getChannelListSize()));
     }
 
@@ -297,12 +297,11 @@ public class DVBManager {
      * @throws InternalException
      * @throws IllegalArgumentException
      */
-    public ChannelInfo changeChannelDown() throws IllegalArgumentException,
+    public void changeChannelDown() throws IllegalArgumentException,
             InternalException {
         int currentChannelNumber = getCurrentChannelNumber();
         int listSize = getChannelListSize();
-        return changeChannelByNumber((--currentChannelNumber + listSize)
-                % listSize);
+        changeChannelByNumber((--currentChannelNumber + listSize) % listSize);
     }
 
     /**
@@ -312,13 +311,13 @@ public class DVBManager {
      * @throws IllegalArgumentException
      * @throws InternalException
      */
-    public ChannelInfo changeChannelByNumber(int channelNumber)
+    public void changeChannelByNumber(int channelNumber)
             throws InternalException {
         channelNumber = (channelNumber + getChannelListSize())
                 % getChannelListSize();
         if (channelNumber == getCurrentChannelNumber()) {
             mDVBStatus.zappingOnSameCahnnel();
-            return null;
+            return;
         } else {
             int numberOfDtvChannels = getChannelListSize()
                     - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
@@ -334,7 +333,7 @@ public class DVBManager {
                 int route = getActiveRouteByServiceType(desiredService
                         .getSourceType());
                 if (route == -1) {
-                    return null;
+                    return;
                 }
                 mCurrentLiveRoute = route;
                 mDTVManager.getServiceControl().startService(
@@ -353,7 +352,6 @@ public class DVBManager {
                                 channelNumber - numberOfDtvChannels).getUrl());
             }
             DTVActivity.setLastWatchedChannelIndex(channelNumber);
-            return getChannelInfo(channelNumber);
         }
     }
 
@@ -432,8 +430,14 @@ public class DVBManager {
     public int getCurrentChannelNumber() {
         /** For IP */
         if (mCurrentLiveRoute == mLiveRouteIp) {
+            Log.i(TAG, "Channel NUmber: " + mCurrentChannelNumberIp);
             return mCurrentChannelNumberIp;
         }
+        Log.i(TAG,
+                "Channel NUmber all: "
+                        + ((mDTVManager.getServiceControl().getActiveService(
+                                mCurrentLiveRoute).getServiceIndex()) - (ipAndSomeOtherTunerType ? 1
+                                : 0)));
         return (int) (mDTVManager.getServiceControl().getActiveService(
                 mCurrentLiveRoute).getServiceIndex())
                 - (ipAndSomeOtherTunerType ? 1 : 0);
@@ -445,11 +449,9 @@ public class DVBManager {
      * @return Object of Channel Info class.
      * @throws IllegalArgumentException
      */
-    public ChannelInfo getChannelInfo(int channelNumber)
-            throws IllegalArgumentException {
+    public ChannelInfo getChannelInfo(int channelNumber) {
         if (channelNumber < 0 || channelNumber >= getChannelListSize()) {
-            throw new IllegalArgumentException("Illegal channel index! "
-                    + channelNumber + ", List size is: " + getChannelListSize());
+            return null;
         }
         int numberOfDtvChannels = getChannelListSize()
                 - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
@@ -468,7 +470,7 @@ public class DVBManager {
                             mEPGFilterID, channelNumber,
                             EpgEventType.FOLLOWING_EVENT));
         }
-        /** Return IP  channel. */
+        /** Return IP channel. */
         else {
             return new ChannelInfo(channelNumber + 1, DTVActivity.sIpChannels
                     .get(channelNumber - numberOfDtvChannels).getName(), null,
