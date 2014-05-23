@@ -11,13 +11,12 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
+import com.iwedia.callbacks.EPGCallBack;
 import com.iwedia.callbacks.ScanCallBack;
 import com.iwedia.dtv.dtvmanager.DTVManager;
 import com.iwedia.dtv.dtvmanager.IDTVManager;
-import com.iwedia.dtv.epg.EpgEvent;
 import com.iwedia.dtv.epg.EpgEventType;
 import com.iwedia.dtv.route.broadcast.IBroadcastRouteControl;
 import com.iwedia.dtv.route.broadcast.RouteDemuxDescriptor;
@@ -58,8 +57,10 @@ public class DVBManager {
     private static DVBManager sInstance = null;
     /** CallBack for UI. */
     private DVBStatus mDVBStatus = null;
-    /** Scan CallBack */
+    /** Scan CallBack. */
     private ScanCallBack mScanCallBack = null;
+    /** EPG CallBack. */
+    private EPGCallBack mEpgCallBack = null;
 
     /**
      * CallBack for currently DVB status.
@@ -73,6 +74,9 @@ public class DVBManager {
 
         /** Antenna Connected Status. */
         public void antennaConnected(boolean status);
+
+        /** Update Now Next values. */
+        public void updateNowNext();
     }
 
     public static DVBManager getInstance() throws InternalException {
@@ -206,8 +210,8 @@ public class DVBManager {
      * @throws IllegalArgumentException
      * @throws InternalException
      */
-    public ChannelInfo startDTV(int channelNumber)
-            throws IllegalArgumentException, InternalException {
+    public void startDTV(int channelNumber) throws IllegalArgumentException,
+            InternalException {
         if (channelNumber < 0 || channelNumber >= getChannelListSize()) {
             throw new IllegalArgumentException("Illegal channel index!");
         }
@@ -216,7 +220,7 @@ public class DVBManager {
         int route = getActiveRouteByServiceType(desiredService.getSourceType());
         /** Wrong route. */
         if (route == -1 && mLiveRouteIp == -1) {
-            return null;
+            return;
         } else {
             /** There is IP and DVB. */
             if (ipAndSomeOtherTunerType) {
@@ -259,7 +263,6 @@ public class DVBManager {
                         mCurrentListIndex, channelNumber);
             }
         }
-        return getChannelInfo(channelNumber);
     }
 
     /**
@@ -270,6 +273,8 @@ public class DVBManager {
     public void stopDTV() throws InternalException {
         mDTVManager.getServiceControl().stopService(mCurrentLiveRoute);
         mDTVManager.getScanControl().unregisterCallback(mScanCallBack);
+        mDTVManager.getEpgControl().unregisterCallback(mEpgCallBack,
+                mEPGFilterID);
     }
 
     /**
@@ -278,6 +283,9 @@ public class DVBManager {
     public void registerCallBacks() {
         mScanCallBack = new ScanCallBack();
         mDTVManager.getScanControl().registerCallback(mScanCallBack);
+        mEpgCallBack = new EPGCallBack();
+        mDTVManager.getEpgControl()
+                .registerCallback(mEpgCallBack, mEPGFilterID);
     }
 
     /**
@@ -332,8 +340,8 @@ public class DVBManager {
                                 mCurrentListIndex,
                                 ipAndSomeOtherTunerType ? channelNumber + 1
                                         : channelNumber);
-                /** Channel is Scrambled Toast. */
-                mDVBStatus.channelIsScrambled(desiredService.isScrambled());
+                /** Channel is Scrambled Toast. Currently Disabled. */
+                // mDVBStatus.channelIsScrambled(desiredService.isScrambled());
                 int route = getActiveRouteByServiceType(desiredService
                         .getSourceType());
                 if (route == -1) {
@@ -356,7 +364,7 @@ public class DVBManager {
                                 channelNumber - numberOfDtvChannels).getUrl());
             }
             DTVActivity.setLastWatchedChannelIndex(channelNumber);
-            return getChannelInfo(channelNumber);
+            return getChannelInfo(channelNumber, true);
         }
     }
 
@@ -415,7 +423,6 @@ public class DVBManager {
         /** If there is IP first element in service list is DUMMY */
         channelListSize = ipAndSomeOtherTunerType ? channelListSize + 1
                 : channelListSize;
-        Log.d(TAG, "channelListSize " + channelListSize);
         for (int i = ipAndSomeOtherTunerType ? 1 : 0; i < channelListSize; i++) {
             channelName = serviceControl.getServiceDescriptor(
                     mCurrentListIndex, i).getName();
@@ -427,7 +434,6 @@ public class DVBManager {
                 channelNames.add(DTVActivity.sIpChannels.get(i).getName());
             }
         }
-        Log.d(TAG, "Channels " + channelNames.toString());
         return channelNames;
     }
 
@@ -450,11 +456,9 @@ public class DVBManager {
      * @return Object of Channel Info class.
      * @throws IllegalArgumentException
      */
-    public ChannelInfo getChannelInfo(int channelNumber)
-            throws IllegalArgumentException {
+    public ChannelInfo getChannelInfo(int channelNumber, boolean channelChange) {
         if (channelNumber < 0 || channelNumber >= getChannelListSize()) {
-            throw new IllegalArgumentException("Illegal channel index! "
-                    + channelNumber + ", List size is: " + getChannelListSize());
+            return null;
         }
         int numberOfDtvChannels = getChannelListSize()
                 - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
@@ -466,12 +470,18 @@ public class DVBManager {
                             mCurrentListIndex,
                             ipAndSomeOtherTunerType ? channelNumber + 1
                                     : channelNumber).getName();
-            return new ChannelInfo(channelNumber + 1, channelName, mDTVManager
-                    .getEpgControl().getPresentFollowingEvent(mEPGFilterID,
-                            channelNumber, EpgEventType.PRESENT_EVENT),
-                    mDTVManager.getEpgControl().getPresentFollowingEvent(
-                            mEPGFilterID, channelNumber,
-                            EpgEventType.FOLLOWING_EVENT));
+            if (channelChange) {
+                return new ChannelInfo(channelNumber + 1, channelName, null,
+                        null);
+            } else {
+                return new ChannelInfo(channelNumber + 1, channelName,
+                        mDTVManager.getEpgControl().getPresentFollowingEvent(
+                                mEPGFilterID, channelNumber,
+                                EpgEventType.PRESENT_EVENT), mDTVManager
+                                .getEpgControl().getPresentFollowingEvent(
+                                        mEPGFilterID, channelNumber,
+                                        EpgEventType.FOLLOWING_EVENT));
+            }
         }
         /** Return IP channel. */
         else {
@@ -493,6 +503,13 @@ public class DVBManager {
      */
     public void showAntennaConnectedLayout(boolean status) {
         mDVBStatus.antennaConnected(status);
+    }
+
+    /**
+     * Update Now Next.
+     */
+    public void udpateNowNext() {
+        mDVBStatus.updateNowNext();
     }
 
     /**

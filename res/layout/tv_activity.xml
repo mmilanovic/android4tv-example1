@@ -79,7 +79,8 @@
                     android:background="@drawable/parental_selector"
                     android:padding="@dimen/padding_parental"
                     android:textColor="@color/parental"
-                    android:textSize="@dimen/text_size_parental"/>
+                    android:textSize="@dimen/text_size_parental"
+                    android:visibility="invisible"/>
             </RelativeLayout>
             <TextView
                 android:id="@+id/textview_channel_name"

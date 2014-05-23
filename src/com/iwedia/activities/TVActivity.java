@@ -76,7 +76,7 @@ public class TVActivity extends DTVActivity {
     /** Buffer for Channel Index, Numeric Channel Change. */
     private StringBuilder mBufferedChannelIndex = null;
     /** Current Channel Info. */
-    private ChannelInfo mChannelInfo = null;
+    // private ChannelInfo mChannelInfo = null;
     /** Channel List Dialog. */
     private ChannelListDialog mChannelListDialog = null;
 
@@ -102,7 +102,7 @@ public class TVActivity extends DTVActivity {
         mDateFormat = new SimpleDateFormat("dd/MM/yyyy");
         /** Start DTV. */
         try {
-            mChannelInfo = mDVBManager.startDTV(getLastWatchedChannelIndex());
+            mDVBManager.startDTV(getLastWatchedChannelIndex());
         } catch (IllegalArgumentException e) {
             Toast.makeText(
                     this,
@@ -184,7 +184,7 @@ public class TVActivity extends DTVActivity {
      */
     private void initializeChannelContainer() {
         mChannelInfoContainer = (RelativeLayout) findViewById(R.id.linearlayout_channel_info_container);
-        mChannelInfoContainer.setVisibility(View.GONE);
+        mChannelInfoContainer.setVisibility(View.INVISIBLE);
         mChannelNumber = (TextView) findViewById(R.id.textview_channel_number);
         mChannelName = (TextView) findViewById(R.id.textview_channel_name);
     }
@@ -212,7 +212,6 @@ public class TVActivity extends DTVActivity {
             display.getSize(size);
             mChannelListDialog = new ChannelListDialog(this, mDVBManager,
                     size.x, size.y);
-            Log.i(TAG, "Size: " + size.x + "x" + size.y);
         }
         return mChannelListDialog;
     }
@@ -222,15 +221,14 @@ public class TVActivity extends DTVActivity {
      * 
      * @param channelInfo
      */
+    @Override
     public void showChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
-            /** Save Current Instance. */
-            mChannelInfo = channelInfo;
             /** Prepare Views. */
             mChannelNumber.setText(String.valueOf(channelInfo.getNumber()));
             mChannelName.setText(channelInfo.getName());
             if (channelInfo.getParental().equals("")) {
-                mEPGParental.setVisibility(View.GONE);
+                mEPGParental.setVisibility(View.INVISIBLE);
             } else {
                 mEPGParental.setText(getResources().getString(
                         R.string.parental, channelInfo.getParental()));
@@ -253,7 +251,7 @@ public class TVActivity extends DTVActivity {
                 mEPGEndTime.setText(getTime(channelInfo.getEndTime()));
                 mNowNextContainer.setVisibility(View.VISIBLE);
             } else {
-                mNowNextContainer.setVisibility(View.GONE);
+                mNowNextContainer.setVisibility(View.INVISIBLE);
             }
             try {
                 TimeDate lCurrentTime = DVBManager.getInstance()
@@ -289,6 +287,8 @@ public class TVActivity extends DTVActivity {
         /** Show Index and Change Channel */
         mChannelNumber.setText(mBufferedChannelIndex.toString());
         mChannelName.setText("");
+        mNowNextContainer.setVisibility(View.INVISIBLE);
+        mEPGParental.setVisibility(View.INVISIBLE);
         mChannelInfoContainer.setVisibility(View.VISIBLE);
         mHandler.removeMessages(UiHandler.NUMERIC_CHANNEL_CHANGE);
         mHandler.sendEmptyMessageDelayed(UiHandler.NUMERIC_CHANNEL_CHANGE,
@@ -358,7 +358,8 @@ public class TVActivity extends DTVActivity {
             }
             /** Open Channel Info. */
             case KeyEvent.KEYCODE_INFO: {
-                showChannelInfo(mChannelInfo);
+                showChannelInfo(mDVBManager.getChannelInfo(
+                        mDVBManager.getCurrentChannelNumber(), false));
                 return true;
             }
             default: {
@@ -422,13 +423,6 @@ public class TVActivity extends DTVActivity {
     }
 
     /**
-     * Get Current Channel Info.
-     */
-    public ChannelInfo getChannelInfo() {
-        return mChannelInfo;
-    }
-
-    /**
      * Handler for sending action messages to update UI.
      */
     private class UiHandler extends Handler {
@@ -447,7 +441,8 @@ public class TVActivity extends DTVActivity {
                 case NUMERIC_CHANNEL_CHANGE: {
                     int lChannelNumber = Integer.valueOf(mBufferedChannelIndex
                             .toString());
-                    ChannelInfo lChannelInfo = mChannelInfo;
+                    ChannelInfo lChannelInfo = mDVBManager.getChannelInfo(
+                            mDVBManager.getCurrentChannelNumber(), false);
                     if (lChannelNumber > 0
                             && lChannelNumber <= mDVBManager
                                     .getChannelListSize()) {
@@ -461,6 +456,10 @@ public class TVActivity extends DTVActivity {
                                     "There was an Internal Execption on Change Channel.",
                                     e);
                         }
+                    } else {
+                        Toast.makeText(TVActivity.this,
+                                R.string.non_existing_channel,
+                                Toast.LENGTH_SHORT).show();
                     }
                     showChannelInfo(lChannelInfo);
                     /** Flush Channel Buffer */
