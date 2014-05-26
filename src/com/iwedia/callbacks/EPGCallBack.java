@@ -20,6 +20,9 @@ public class EPGCallBack implements IEpgCallback {
 
     @Override
     public void pfAcquisitionFinished(int arg0, int arg1) {
+        if (mDVBManager != null) {
+            mDVBManager.udpateNowNext();
+        }
     }
 
     @Override

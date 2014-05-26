@@ -89,7 +89,6 @@ public class DVBManager {
     private DVBManager() throws InternalException {
         mDTVManager = new DTVManager();
         InitializeDTVService();
-        
     }
 
     /**
@@ -273,6 +272,7 @@ public class DVBManager {
     public void stopDTV() throws InternalException {
         mDTVManager.getServiceControl().stopService(mCurrentLiveRoute);
         mDTVManager.getScanControl().unregisterCallback(mScanCallBack);
+        mDTVManager.getEpgControl().releaseEventList(mEPGFilterID);
         mDTVManager.getEpgControl().unregisterCallback(mEpgCallBack,
                 mEPGFilterID);
     }
