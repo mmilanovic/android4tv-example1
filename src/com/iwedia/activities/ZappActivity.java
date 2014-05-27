@@ -45,7 +45,7 @@ import java.util.Date;
 /**
  * TVActivity - Activity for Watching Channels.
  */
-public class TVActivity extends DTVActivity {
+public class ZappActivity extends DTVActivity {
     public static final String TAG = "TVActivity";
     /** Channel Number/Name View Duration in Milliseconds. */
     private static final int CHANNEL_VIEW_DURATION = 5000;
@@ -457,7 +457,7 @@ public class TVActivity extends DTVActivity {
                                     e);
                         }
                     } else {
-                        Toast.makeText(TVActivity.this,
+                        Toast.makeText(ZappActivity.this,
                                 R.string.non_existing_channel,
                                 Toast.LENGTH_SHORT).show();
                     }

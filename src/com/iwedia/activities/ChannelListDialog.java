@@ -32,10 +32,10 @@ import com.iwedia.zapp.R;
 public class ChannelListDialog extends Dialog implements OnItemClickListener {
     public static final String TAG = "ChannelListActivity";
     private GridView mChannelList = null;
-    private TVActivity mActivity = null;
+    private ZappActivity mActivity = null;
     private DVBManager mDVBManager = null;
 
-    public ChannelListDialog(TVActivity activity, DVBManager dvbManager,
+    public ChannelListDialog(ZappActivity activity, DVBManager dvbManager,
             int width, int height) {
         super(activity, R.style.DialogTransparent);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
