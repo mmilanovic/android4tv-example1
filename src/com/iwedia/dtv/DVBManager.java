@@ -277,6 +277,7 @@ public class DVBManager {
         mDTVManager.getEpgControl().releaseEventList(mEPGFilterID);
         mDTVManager.getEpgControl().unregisterCallback(mEpgCallBack,
                 mEPGFilterID);
+        sInstance = null;
     }
 
     /**
