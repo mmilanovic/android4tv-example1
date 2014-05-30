@@ -61,6 +61,8 @@ public class DVBManager {
     private ScanCallBack mScanCallBack = null;
     /** EPG CallBack. */
     private EPGCallBack mEpgCallBack = null;
+    /** Volume Mute Status. */
+    private boolean mVolumeMute = false;
 
     /**
      * CallBack for currently DVB status.
@@ -489,6 +491,30 @@ public class DVBManager {
                     .get(channelNumber - numberOfDtvChannels).getName(), null,
                     null);
         }
+    }
+
+    /**
+     * Set Current Volume.
+     */
+    public void setVolume(int volume) {
+        mDTVManager.getAudioControl().setVolume(mCurrentLiveRoute,
+                (double) volume);
+    }
+
+    /**
+     * Get Current Volume.
+     */
+    public int getCurrentVolume() {
+        return (int) mDTVManager.getAudioControl().getVolume(mCurrentLiveRoute);
+    }
+
+    /**
+     * Set Volume Mute Status.
+     */
+    public int setVolumeMute() {
+        mVolumeMute = !mVolumeMute;
+        mDTVManager.getAudioControl().muteAudio(mCurrentLiveRoute, mVolumeMute);
+        return mVolumeMute ? 0 : getCurrentVolume();
     }
 
     /**

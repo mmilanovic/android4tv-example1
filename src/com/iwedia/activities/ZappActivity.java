@@ -53,6 +53,10 @@ public class ZappActivity extends DTVActivity {
     private static final int NUMERIC_CHANNEL_CHANGE_DURATION = 2000;
     /** Maximum Length of Numeric Buffer. */
     private static final int MAX_CHANNEL_NUMBER_LENGTH = 4;
+    /** Volume States */
+    private static final int VOLUME_UP = 0;
+    private static final int VOLUME_DOWN = 1;
+    private static final int VOLUME_MUTE = 2;
     /** URI For VideoView. */
     public static final String TV_URI = "tv://";
     /** Time and Date Format */
@@ -296,6 +300,27 @@ public class ZappActivity extends DTVActivity {
     }
 
     /**
+     * Show Volume.
+     * 
+     * @param volume
+     */
+    private void showVolume(int volume) {
+        mProgressBarNow.setProgress(volume);
+        mProgressBarNow.setVisibility(View.VISIBLE);
+        mEPGNow.setText(R.string.volume);
+        mEPGNext.setText("");
+        mEPGStartTime.setText(getResources().getString(R.string.volume_percent,
+                "" + volume));
+        mEPGEndTime.setText("");
+        mNowNextContainer.setVisibility(View.VISIBLE);
+        mChannelInfoContainer.setVisibility(View.VISIBLE);
+        /** Handle Messages. */
+        mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
+        mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_VIEW_MESSAGE,
+                CHANNEL_VIEW_DURATION);
+    }
+
+    /**
      * Listener For Keys.
      */
     @Override
@@ -341,6 +366,20 @@ public class ZappActivity extends DTVActivity {
                             e);
                     finishActivity();
                 }
+                return true;
+            }
+            /** Change Volume and Show It. */
+            case KeyEvent.KEYCODE_VOLUME_UP: {
+                calculateVolume(VOLUME_UP);
+                return true;
+            }
+            case KeyEvent.KEYCODE_VOLUME_DOWN: {
+                calculateVolume(VOLUME_DOWN);
+                return true;
+            }
+            case 91:
+            case KeyEvent.KEYCODE_VOLUME_MUTE: {
+                calculateVolume(VOLUME_MUTE);
                 return true;
             }
             case KeyEvent.KEYCODE_0:
@@ -400,6 +439,33 @@ public class ZappActivity extends DTVActivity {
             default:
                 return 0;
         }
+    }
+
+    private void calculateVolume(int state) {
+        int lCurrentVolume = mDVBManager.getCurrentVolume();
+        switch (state) {
+            case VOLUME_UP: {
+                lCurrentVolume++;
+                if (lCurrentVolume > 100) {
+                    lCurrentVolume = 100;
+                }
+                mDVBManager.setVolume(lCurrentVolume);
+                break;
+            }
+            case VOLUME_DOWN: {
+                lCurrentVolume--;
+                if (lCurrentVolume < 0) {
+                    lCurrentVolume = 0;
+                }
+                mDVBManager.setVolume(lCurrentVolume);
+                break;
+            }
+            case VOLUME_MUTE: {
+                lCurrentVolume = mDVBManager.setVolumeMute();
+                break;
+            }
+        }
+        showVolume(lCurrentVolume);
     }
 
     /**
