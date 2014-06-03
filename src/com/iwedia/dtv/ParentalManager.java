@@ -14,6 +14,7 @@ import com.iwedia.dtv.dtvmanager.IDTVManager;
 import com.iwedia.dtv.parental.dvb.IParentalCallbackDvb;
 import com.iwedia.dtv.parental.dvb.IParentalControlDvb;
 import com.iwedia.dtv.parental.dvb.ParentalLockAge;
+import com.iwedia.dtv.types.InternalException;
 
 /**
  * Class for handling parental rate and channel lock.
@@ -60,5 +61,15 @@ public class ParentalManager {
 
     public boolean checkPin(int pin) {
         return mParentalControl.checkPinCode(pin);
+    }
+
+    public void setChannelLock(int channelIndex, boolean locked)
+            throws InternalException {
+        mParentalControl.setChannelLock(channelIndex+(DVBManager.getInstance().isIpAndSomeOtherTunerType()?1:0), locked);
+    }
+
+    public boolean getChannelLockStatus(int channelIndex)
+            throws InternalException {
+        return mParentalControl.getChannelLock(channelIndex+(DVBManager.getInstance().isIpAndSomeOtherTunerType()?1:0));
     }
 }

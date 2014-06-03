@@ -14,11 +14,15 @@ import android.app.Dialog;
 import android.graphics.PixelFormat;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.CheckBox;
 import android.widget.GridView;
 
 import com.iwedia.adapters.ChannelListAdapter;
@@ -75,21 +79,55 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
         super.onBackPressed();
         mActivity.showChannelInfo(mDVBManager.getChannelInfo(
                 mDVBManager.getCurrentChannelNumber(), true));
+        ((ChannelListAdapter) mChannelList.getAdapter())
+                .setInChannelLockedState(false);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = mActivity.getMenuInflater();
+        inflater.inflate(R.menu.channel_lock, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        if (item.getItemId() == R.id.menu_channel_lock) {
+            ((ChannelListAdapter) mChannelList.getAdapter())
+                    .setInChannelLockedState(!((ChannelListAdapter) mChannelList
+                            .getAdapter()).isInChannelLockedState());
+        }
+        return super.onMenuItemSelected(featureId, item);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        try {
-            cancel();
-            mActivity.showChannelInfo(mDVBManager
-                    .changeChannelByNumber(position));
-        } catch (InternalException e) {
-            /** Error with service connection. */
-            mActivity.finishActivity();
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG,
-                    "Error with adapter data when trying to change channel!", e);
-            ((ChannelListAdapter) parent.getAdapter()).notifyDataSetChanged();
+        if (((ChannelListAdapter) parent.getAdapter()).isInChannelLockedState()) {
+            CheckBox checkBox = (CheckBox) v
+                    .findViewById(R.id.check_box_locked);
+            try {
+                DVBManager.getInstance().getParentalManager()
+                        .setChannelLock(position, !checkBox.isChecked());
+            } catch (InternalException e) {
+                e.printStackTrace();
+            }
+            checkBox.setChecked(!checkBox.isChecked());
+            v.invalidate();
+        } else {
+            try {
+                cancel();
+                mActivity.showChannelInfo(mDVBManager
+                        .changeChannelByNumber(position));
+            } catch (InternalException e) {
+                /** Error with service connection. */
+                mActivity.finishActivity();
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG,
+                        "Error with adapter data when trying to change channel!",
+                        e);
+                ((ChannelListAdapter) parent.getAdapter())
+                        .notifyDataSetChanged();
+            }
         }
     }
 }

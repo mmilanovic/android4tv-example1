@@ -553,4 +553,8 @@ public class DVBManager {
     public void setDVBStatus(DVBStatus dvbStatus) {
         mDVBStatus = dvbStatus;
     }
+
+    public boolean isIpAndSomeOtherTunerType() {
+        return ipAndSomeOtherTunerType;
+    }
 }
