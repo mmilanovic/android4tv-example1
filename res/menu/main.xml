@@ -16,9 +16,17 @@
 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" >
     <item
         android:id="@+id/menu_scan_usb"
         android:orderInCategory="100"
         android:title="@string/load_ip_channel"/>
+    <item
+        android:id="@+id/menu_parental_age"
+        android:orderInCategory="100"
+        android:title="@string/parental_age">
+        <menu>
+            <!-- empty submenu, filled programatically -->
+        </menu>
+    </item>
 </menu>

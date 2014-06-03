@@ -19,6 +19,7 @@
     <string name="scrambled">Channel is Scrambled</string>
     <string name="active">Channel is Already Active</string>
     <string name="load_ip_channel">Load IP channel list from USB</string>
+    <string name="parental_age">Set parental age</string>
     <string name="no_antenna">No Antenna Connected</string>
     <string name="epg_now">Now: %1$s</string>
     <string name="epg_next">Next: %1$s</string>
