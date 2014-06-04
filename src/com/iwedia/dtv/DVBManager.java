@@ -63,7 +63,6 @@ public class DVBManager {
     private EPGCallBack mEpgCallBack = null;
     /** Volume Mute Status. */
     private boolean mVolumeMute = false;
-    private ParentalManager mParentalManager = null;
 
     /**
      * CallBack for currently DVB status.
@@ -101,7 +100,6 @@ public class DVBManager {
      */
     private void InitializeDTVService() throws InternalException {
         initializeRouteId();
-        mParentalManager = ParentalManager.getInstance(mDTVManager);
         mEPGFilterID = mDTVManager.getEpgControl().createEventList();
     }
 
@@ -279,8 +277,6 @@ public class DVBManager {
         mDTVManager.getEpgControl().releaseEventList(mEPGFilterID);
         mDTVManager.getEpgControl().unregisterCallback(mEpgCallBack,
                 mEPGFilterID);
-        mParentalManager.unregisterCallback();
-        ParentalManager.destroyInstance();
         sInstance = null;
     }
 
@@ -541,10 +537,6 @@ public class DVBManager {
      */
     public void udpateNowNext() {
         mDVBStatus.updateNowNext();
-    }
-
-    public ParentalManager getParentalManager() {
-        return mParentalManager;
     }
 
     /**

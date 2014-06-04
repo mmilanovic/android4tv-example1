@@ -28,4 +28,5 @@
     <string name="non_existing_channel">Trying to switch to non existent service</string>
     <string name="volume">Volume</string>
     <string name="volume_percent">%1$s%%</string>
+    <string name="enter_pin">Enter Pin code</string>
 </resources>

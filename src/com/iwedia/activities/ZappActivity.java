@@ -24,7 +24,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -32,11 +31,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.iwedia.callbacks.ParentalCallback;
 import com.iwedia.dtv.ChannelInfo;
 import com.iwedia.dtv.DVBManager;
 import com.iwedia.dtv.IPService;
-import com.iwedia.dtv.parental.dvb.ParentalLockAge;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.dtv.types.TimeDate;
 import com.iwedia.zapp.R;
@@ -120,40 +117,13 @@ public class ZappActivity extends DTVActivity {
             /** Error with service connection. */
             finishActivity();
         }
-        /** Register parental callback. */
-        mDVBManager.getParentalManager().registerCallback(
-                ParentalCallback.getInstance(this));
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-        MenuItem menuItem = menu.findItem(R.id.menu_parental_age);
-        SubMenu subMenu = menuItem.getSubMenu();
-        for (int i = 0; i < ParentalLockAge.values().length; i++) {
-            ParentalLockAge parental = ParentalLockAge.values()[i];
-            String text = parental.name();
-            if (text.contains("_")) {
-                text = text.replace("_", " ");
-                text = text.replace("LOCK", "UNDER");
-            }
-            MenuItem item = subMenu.add(Menu.NONE, i, Menu.NONE, text);
-            item.setCheckable(true);
-        }
         return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        /** Return all parental menu items to UNCHECKED. */
-        for (int i = 0; i < ParentalLockAge.values().length; i++) {
-            menu.findItem(i).setChecked(false);
-        }
-        /** CHECK active menu item. */
-        menu.findItem(mDVBManager.getParentalManager().getParentalRate())
-                .setChecked(true);
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -166,13 +136,6 @@ public class ZappActivity extends DTVActivity {
                 sIpChannels = ipChannels;
                 return true;
             }
-        }
-        /** Check for parental rate values. */
-        if (item.getItemId() >= 0
-                && item.getItemId() < ParentalLockAge.values().length) {
-            mDVBManager.getParentalManager().setParentalRate(
-                    ParentalLockAge.values()[item.getItemId()]);
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }
