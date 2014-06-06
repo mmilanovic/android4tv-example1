@@ -147,6 +147,8 @@ public class DVBManager {
                             mLiveRouteSat = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteSat, i));
                         }
                         break;
                     }
@@ -155,6 +157,8 @@ public class DVBManager {
                             mLiveRouteCab = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteCab, i));
                         }
                         break;
                     }
@@ -163,6 +167,8 @@ public class DVBManager {
                             mLiveRouteTer = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteTer, i));
                         }
                         break;
                     }
@@ -171,6 +177,8 @@ public class DVBManager {
                             mLiveRouteIp = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteIp, i));
                         }
                         break;
                     }
@@ -264,6 +272,8 @@ public class DVBManager {
                         mCurrentListIndex, channelNumber);
             }
         }
+        mDVBStatus.antennaConnected(FrontendManager
+                .getAntennaState(mCurrentLiveRoute));
     }
 
     /**
@@ -366,6 +376,8 @@ public class DVBManager {
                         DTVActivity.sIpChannels.get(
                                 channelNumber - numberOfDtvChannels).getUrl());
             }
+            mDVBStatus.antennaConnected(FrontendManager
+                    .getAntennaState(mCurrentLiveRoute));
             DTVActivity.setLastWatchedChannelIndex(channelNumber);
             return getChannelInfo(channelNumber, true);
         }
@@ -528,8 +540,17 @@ public class DVBManager {
     /**
      * Show Layout for Antenna Connected.
      */
-    public void showAntennaConnectedLayout(boolean status) {
-        mDVBStatus.antennaConnected(status);
+    public void showAntennaConnectedLayout(boolean status, int frontendIndex) {
+        FrontendManager.setAntennaState(frontendIndex, status);
+        /**
+         * Send callback if antenna is disconnected on live route, or it is
+         * connected
+         */
+        int routeId = FrontendManager
+                .getLiveRouteByFrontendIndex(frontendIndex);
+        if ((!status && routeId == mCurrentLiveRoute) || status) {
+            mDVBStatus.antennaConnected(status);
+        }
     }
 
     /**

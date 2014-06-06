@@ -24,8 +24,9 @@ public class ScanCallBack implements IScanCallback {
 
     @Override
     public void antennaConnected(int arg0, boolean status) {
+        Log.d(TAG, "antennaConnected: " + status + ", ROUTE: " + arg0);
         if (mDVBManager != null) {
-            mDVBManager.showAntennaConnectedLayout(status);
+            mDVBManager.showAntennaConnectedLayout(status, arg0);
         }
     }
 
