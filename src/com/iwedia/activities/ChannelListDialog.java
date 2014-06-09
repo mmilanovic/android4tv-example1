@@ -54,13 +54,6 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
         mDVBManager = dvbManager;
         /** Initialize GridView. */
         initializeChannelList();
-        mChannelList.setAdapter(new ChannelListAdapter(activity, dvbManager
-                .getChannelNames()));
-        try {
-            mChannelList.setSelection(dvbManager.getCurrentChannelNumber());
-        } catch (InternalException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -72,6 +65,18 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
     private void initializeChannelList() {
         mChannelList = (GridView) findViewById(R.id.gridview_channellist);
         mChannelList.setOnItemClickListener(this);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        mChannelList.setAdapter(new ChannelListAdapter(mActivity, mDVBManager
+                .getChannelNames()));
+        try {
+            mChannelList.setSelection(mDVBManager.getCurrentChannelNumber());
+        } catch (InternalException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
