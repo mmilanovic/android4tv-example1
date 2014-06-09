@@ -11,6 +11,7 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
 import com.iwedia.callbacks.EPGCallBack;
@@ -310,7 +311,13 @@ public class DVBManager {
      */
     public ChannelInfo changeChannelUp() throws IllegalArgumentException,
             InternalException {
-        return changeChannelByNumber((getCurrentChannelNumber() + 1)
+        int currentChannel = 0;
+        try {
+            currentChannel = getCurrentChannelNumber();
+        } catch (InternalException e) {
+            currentChannel = DTVActivity.getLastWatchedChannelIndex();
+        }
+        return changeChannelByNumber((currentChannel + 1)
                 % (getChannelListSize()));
     }
 
@@ -323,7 +330,12 @@ public class DVBManager {
      */
     public ChannelInfo changeChannelDown() throws IllegalArgumentException,
             InternalException {
-        int currentChannelNumber = getCurrentChannelNumber();
+        int currentChannelNumber = 0;
+        try {
+            currentChannelNumber = getCurrentChannelNumber();
+        } catch (InternalException e) {
+            currentChannelNumber = DTVActivity.getLastWatchedChannelIndex();
+        }
         int listSize = getChannelListSize();
         return changeChannelByNumber((--currentChannelNumber + listSize)
                 % listSize);
@@ -340,7 +352,13 @@ public class DVBManager {
             throws InternalException {
         channelNumber = (channelNumber + getChannelListSize())
                 % getChannelListSize();
-        if (channelNumber == getCurrentChannelNumber()) {
+        int currentChannelNumber = 0;
+        try {
+            currentChannelNumber = getCurrentChannelNumber();
+        } catch (InternalException e) {
+            currentChannelNumber = DTVActivity.getLastWatchedChannelIndex();
+        }
+        if (channelNumber == currentChannelNumber) {
             mDVBStatus.zappingOnSameCahnnel();
             return null;
         } else {
@@ -455,14 +473,19 @@ public class DVBManager {
     /**
      * Get Current Channel Number.
      */
-    public int getCurrentChannelNumber() {
+    public int getCurrentChannelNumber() throws InternalException {
         /** For IP */
         if (mCurrentLiveRoute == mLiveRouteIp) {
             return mCurrentChannelNumberIp;
         }
-        return (int) (mDTVManager.getServiceControl().getActiveService(
-                mCurrentLiveRoute).getServiceIndex())
-                - (ipAndSomeOtherTunerType ? 1 : 0);
+        int current = (mDTVManager.getServiceControl().getActiveService(
+                mCurrentLiveRoute).getServiceIndex());
+        current = current - (ipAndSomeOtherTunerType ? 1 : 0);
+        /** This is error in comedia and should be ignored. */
+        if (current < 0) {
+            throw new InternalException();
+        }
+        return current;
     }
 
     /**

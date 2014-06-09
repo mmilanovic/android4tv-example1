@@ -225,7 +225,16 @@ public class ZappActivity extends DTVActivity {
      * @param channelInfo
      */
     @Override
-    public void showChannelInfo(ChannelInfo channelInfo) {
+    public void showChannelInfo() {
+        mChannelInfoContainer.setVisibility(View.VISIBLE);
+        /** Handle Messages. */
+        mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
+        mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_VIEW_MESSAGE,
+                CHANNEL_VIEW_DURATION);
+    }
+
+    @Override
+    public void setChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
             /** Prepare Views. */
             mChannelNumber.setText(String.valueOf(channelInfo.getNumber()));
@@ -264,11 +273,6 @@ public class ZappActivity extends DTVActivity {
             } catch (InternalException e) {
                 Log.w(TAG, "There was an Internal Error.", e);
             }
-            mChannelInfoContainer.setVisibility(View.VISIBLE);
-            /** Handle Messages. */
-            mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
-            mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_VIEW_MESSAGE,
-                    CHANNEL_VIEW_DURATION);
         } else {
             mChannelInfoContainer.setVisibility(View.INVISIBLE);
             mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
@@ -339,13 +343,13 @@ public class ZappActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F4:
             case KeyEvent.KEYCODE_CHANNEL_UP: {
                 try {
-                    showChannelInfo(mDVBManager.changeChannelUp());
+                    setChannelInfo(mDVBManager.changeChannelUp());
+                    showChannelInfo();
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
                             "Error with service connection, killing application...!",
                             e);
-                    finishActivity();
                 }
                 return true;
             }
@@ -357,13 +361,13 @@ public class ZappActivity extends DTVActivity {
             case KeyEvent.KEYCODE_F3:
             case KeyEvent.KEYCODE_CHANNEL_DOWN: {
                 try {
-                    showChannelInfo(mDVBManager.changeChannelDown());
+                    setChannelInfo(mDVBManager.changeChannelDown());
+                    showChannelInfo();
                 } catch (InternalException e) {
                     /** Error with service connection. */
                     Log.e(TAG,
                             "Error with service connection, killing application...!",
                             e);
-                    finishActivity();
                 }
                 return true;
             }
@@ -396,8 +400,13 @@ public class ZappActivity extends DTVActivity {
             }
             /** Open Channel Info. */
             case KeyEvent.KEYCODE_INFO: {
-                showChannelInfo(mDVBManager.getChannelInfo(
-                        mDVBManager.getCurrentChannelNumber(), false));
+                try {
+                    setChannelInfo(mDVBManager.getChannelInfo(
+                            mDVBManager.getCurrentChannelNumber(), false));
+                    showChannelInfo();
+                } catch (InternalException e) {
+                    e.printStackTrace();
+                }
                 return true;
             }
             default: {
@@ -506,8 +515,13 @@ public class ZappActivity extends DTVActivity {
                 case NUMERIC_CHANNEL_CHANGE: {
                     int lChannelNumber = Integer.valueOf(mBufferedChannelIndex
                             .toString());
-                    ChannelInfo lChannelInfo = mDVBManager.getChannelInfo(
-                            mDVBManager.getCurrentChannelNumber(), false);
+                    ChannelInfo lChannelInfo = null;
+                    try {
+                        lChannelInfo = mDVBManager.getChannelInfo(
+                                mDVBManager.getCurrentChannelNumber(), false);
+                    } catch (InternalException e1) {
+                        e1.printStackTrace();
+                    }
                     if (lChannelNumber > 0
                             && lChannelNumber <= mDVBManager
                                     .getChannelListSize()) {
@@ -526,7 +540,8 @@ public class ZappActivity extends DTVActivity {
                                 R.string.non_existing_channel,
                                 Toast.LENGTH_SHORT).show();
                     }
-                    showChannelInfo(lChannelInfo);
+                    setChannelInfo(lChannelInfo);
+                    showChannelInfo();
                     /** Flush Channel Buffer */
                     mBufferedChannelIndex.delete(0,
                             mBufferedChannelIndex.length());

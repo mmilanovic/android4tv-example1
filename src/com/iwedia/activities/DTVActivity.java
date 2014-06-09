@@ -228,7 +228,14 @@ public abstract class DTVActivity extends Activity {
      * 
      * @param channelInfo
      */
-    public abstract void showChannelInfo(ChannelInfo channelInfo);
+    public abstract void showChannelInfo();
+
+    /**
+     * Sets Channel Name and Number of Current Channel on Channel Change.
+     * 
+     * @param channelInfo
+     */
+    public abstract void setChannelInfo(ChannelInfo channelInfo);
 
     /** Handler */
     private Handler mHandler = new Handler() {
@@ -252,8 +259,12 @@ public abstract class DTVActivity extends Activity {
                     break;
                 }
                 case MESSAGE_UPDATE_NOW_NEXT: {
-                    showChannelInfo(mDVBManager.getChannelInfo(
-                            mDVBManager.getCurrentChannelNumber(), false));
+                    try {
+                        setChannelInfo(mDVBManager.getChannelInfo(
+                                mDVBManager.getCurrentChannelNumber(), false));
+                    } catch (InternalException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 }
                 default:

@@ -56,7 +56,11 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
         initializeChannelList();
         mChannelList.setAdapter(new ChannelListAdapter(activity, dvbManager
                 .getChannelNames()));
-        mChannelList.setSelection(dvbManager.getCurrentChannelNumber());
+        try {
+            mChannelList.setSelection(dvbManager.getCurrentChannelNumber());
+        } catch (InternalException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -73,16 +77,22 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        mActivity.showChannelInfo(mDVBManager.getChannelInfo(
-                mDVBManager.getCurrentChannelNumber(), true));
+        try {
+            mActivity.setChannelInfo(mDVBManager.getChannelInfo(
+                    mDVBManager.getCurrentChannelNumber(), true));
+            mActivity.showChannelInfo();
+        } catch (InternalException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         try {
             cancel();
-            mActivity.showChannelInfo(mDVBManager
+            mActivity.setChannelInfo(mDVBManager
                     .changeChannelByNumber(position));
+            mActivity.showChannelInfo();
         } catch (InternalException e) {
             /** Error with service connection. */
             mActivity.finishActivity();
