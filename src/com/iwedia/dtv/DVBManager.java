@@ -11,7 +11,6 @@
 package com.iwedia.dtv;
 
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.iwedia.activities.DTVActivity;
 import com.iwedia.callbacks.EPGCallBack;
@@ -211,71 +210,6 @@ public class DVBManager {
         return routeControl.getLiveRoute(fDescriptor.getFrontendId(),
                 mDemuxDescriptor.getDemuxId(),
                 mDecoderDescriptor.getDecoderId());
-    }
-
-    /**
-     * Start MW video playback.
-     * 
-     * @param channelNumber
-     * @return Channel Info.
-     * @throws IllegalArgumentException
-     * @throws InternalException
-     */
-    public void startDTV(int channelNumber) throws IllegalArgumentException,
-            InternalException {
-        if (channelNumber < 0 || channelNumber >= getChannelListSize()) {
-            throw new IllegalArgumentException("Illegal channel index!");
-        }
-        ServiceDescriptor desiredService = mDTVManager.getServiceControl()
-                .getServiceDescriptor(mCurrentListIndex, channelNumber);
-        int route = getActiveRouteByServiceType(desiredService.getSourceType());
-        /** Wrong route. */
-        if (route == -1 && mLiveRouteIp == -1) {
-            return;
-        } else {
-            /** There is IP and DVB. */
-            if (ipAndSomeOtherTunerType) {
-                desiredService = mDTVManager.getServiceControl()
-                        .getServiceDescriptor(mCurrentListIndex,
-                                channelNumber + 1);
-                route = getActiveRouteByServiceType(desiredService
-                        .getSourceType());
-                int numberOfDtvChannels = getChannelListSize()
-                        - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels
-                                .size());
-                /** Regular DVB channel. */
-                if (channelNumber < numberOfDtvChannels) {
-                    mCurrentLiveRoute = route;
-                    mDTVManager.getServiceControl().startService(route,
-                            mCurrentListIndex, channelNumber + 1);
-                }
-                /** IP channel. */
-                else {
-                    mCurrentLiveRoute = mLiveRouteIp;
-                    mCurrentChannelNumberIp = channelNumber;
-                    mDTVManager.getServiceControl().zapURL(
-                            mLiveRouteIp,
-                            DTVActivity.sIpChannels.get(
-                                    channelNumber - numberOfDtvChannels)
-                                    .getUrl());
-                }
-            }
-            /** Only IP. */
-            else if (mLiveRouteIp != -1) {
-                mCurrentLiveRoute = mLiveRouteIp;
-                mCurrentChannelNumberIp = channelNumber;
-                mDTVManager.getServiceControl().zapURL(mLiveRouteIp,
-                        DTVActivity.sIpChannels.get(channelNumber).getUrl());
-            }
-            /** Only DVB. */
-            else {
-                mCurrentLiveRoute = route;
-                mDTVManager.getServiceControl().startService(route,
-                        mCurrentListIndex, channelNumber);
-            }
-        }
-        mDVBStatus.antennaConnected(FrontendManager
-                .getAntennaState(mCurrentLiveRoute));
     }
 
     /**

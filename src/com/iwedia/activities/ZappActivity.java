@@ -106,7 +106,7 @@ public class ZappActivity extends DTVActivity {
         mDateFormat = new SimpleDateFormat("dd/MM/yyyy");
         /** Start DTV. */
         try {
-            mDVBManager.startDTV(getLastWatchedChannelIndex());
+            mDVBManager.changeChannelByNumber(getLastWatchedChannelIndex());
         } catch (IllegalArgumentException e) {
             Toast.makeText(
                     this,
