@@ -25,6 +25,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -45,7 +47,8 @@ import java.util.Date;
 /**
  * TVActivity - Activity for Watching Channels.
  */
-public class ZappActivity extends DTVActivity {
+public class ZappActivity extends DTVActivity implements
+        OnMenuItemClickListener {
     public static final String TAG = "TVActivity";
     /** Channel Number/Name View Duration in Milliseconds. */
     private static final int CHANNEL_VIEW_DURATION = 5000;
@@ -83,6 +86,7 @@ public class ZappActivity extends DTVActivity {
     // private ChannelInfo mChannelInfo = null;
     /** Channel List Dialog. */
     private ChannelListDialog mChannelListDialog = null;
+    private PopupMenu mPopup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,15 +124,24 @@ public class ZappActivity extends DTVActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
-        return true;
+    /** Listener for menu button click */
+    public void onClickMenu(View v) {
+        // openOptionsMenu();
+        if (v == null) {
+            v = findViewById(R.id.menu_view);
+        }
+        // create popup menu
+        if (mPopup == null) {
+            mPopup = new PopupMenu(this, v);
+            mPopup.setOnMenuItemClickListener(this);
+            MenuInflater inflater = mPopup.getMenuInflater();
+            inflater.inflate(R.menu.main, mPopup.getMenu());
+        }
+        mPopup.show();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemClick(final MenuItem item) {
         /** Handle item selection. */
         switch (item.getItemId()) {
             case R.id.menu_scan_usb: {
@@ -144,8 +157,10 @@ public class ZappActivity extends DTVActivity {
                 new SoftwareVersionDialog(this, size.x, size.y).show();
                 return true;
             }
+            default: {
+                return false;
+            }
         }
-        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -329,6 +344,15 @@ public class ZappActivity extends DTVActivity {
         mHandler.removeMessages(UiHandler.HIDE_VIEW_MESSAGE);
         mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_VIEW_MESSAGE,
                 CHANNEL_VIEW_DURATION);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            onClickMenu(null);
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     /**
