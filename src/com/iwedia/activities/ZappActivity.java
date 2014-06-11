@@ -106,7 +106,8 @@ public class ZappActivity extends DTVActivity {
         mDateFormat = new SimpleDateFormat("dd/MM/yyyy");
         /** Start DTV. */
         try {
-            mDVBManager.changeChannelByNumber(getLastWatchedChannelIndex());
+            mDVBManager.changeChannelByNumber(getLastWatchedChannelIndex(),
+                    true);
         } catch (IllegalArgumentException e) {
             Toast.makeText(
                     this,
@@ -535,8 +536,8 @@ public class ZappActivity extends DTVActivity {
                         lChannelNumber--;
                         /** Check for Same Channel. */
                         try {
-                            lChannelInfo = mDVBManager
-                                    .changeChannelByNumber(lChannelNumber);
+                            lChannelInfo = mDVBManager.changeChannelByNumber(
+                                    lChannelNumber, false);
                         } catch (InternalException e) {
                             Log.e(TAG,
                                     "There was an Internal Execption on Change Channel.",

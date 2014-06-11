@@ -253,7 +253,7 @@ public class DVBManager {
             currentChannel = DTVActivity.getLastWatchedChannelIndex();
         }
         return changeChannelByNumber((currentChannel + 1)
-                % (getChannelListSize()));
+                % (getChannelListSize()), false);
     }
 
     /**
@@ -273,7 +273,7 @@ public class DVBManager {
         }
         int listSize = getChannelListSize();
         return changeChannelByNumber((--currentChannelNumber + listSize)
-                % listSize);
+                % listSize, false);
     }
 
     /**
@@ -283,7 +283,7 @@ public class DVBManager {
      * @throws IllegalArgumentException
      * @throws InternalException
      */
-    public ChannelInfo changeChannelByNumber(int channelNumber)
+    public ChannelInfo changeChannelByNumber(int channelNumber, boolean initial)
             throws InternalException {
         channelNumber = (channelNumber + getChannelListSize())
                 % getChannelListSize();
@@ -293,7 +293,7 @@ public class DVBManager {
         } catch (InternalException e) {
             currentChannelNumber = DTVActivity.getLastWatchedChannelIndex();
         }
-        if (channelNumber == currentChannelNumber) {
+        if (channelNumber == currentChannelNumber && !initial) {
             mDVBStatus.zappingOnSameCahnnel();
             return null;
         } else {

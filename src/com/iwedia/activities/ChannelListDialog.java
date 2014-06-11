@@ -95,8 +95,8 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         try {
             cancel();
-            mActivity.setChannelInfo(mDVBManager
-                    .changeChannelByNumber(position));
+            mActivity.setChannelInfo(mDVBManager.changeChannelByNumber(
+                    position, false));
             mActivity.showChannelInfo();
         } catch (InternalException e) {
             /** Error with service connection. */
