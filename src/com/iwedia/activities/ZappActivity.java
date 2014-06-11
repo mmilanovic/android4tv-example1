@@ -136,6 +136,13 @@ public class ZappActivity extends DTVActivity {
                 sIpChannels = ipChannels;
                 return true;
             }
+            case R.id.menu_version: {
+                Display display = getWindowManager().getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                new SoftwareVersionDialog(this, size.x, size.y).show();
+                return true;
+            }
         }
         return super.onOptionsItemSelected(item);
     }

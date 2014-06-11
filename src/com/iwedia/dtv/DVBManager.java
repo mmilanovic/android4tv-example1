@@ -29,6 +29,7 @@ import com.iwedia.dtv.route.common.RouteInputOutputDescriptor;
 import com.iwedia.dtv.service.IServiceControl;
 import com.iwedia.dtv.service.ServiceDescriptor;
 import com.iwedia.dtv.service.SourceType;
+import com.iwedia.dtv.swupdate.SWVersionType;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.dtv.types.TimeDate;
 
@@ -574,6 +575,10 @@ public class DVBManager {
         if ((!status && routeId == mCurrentLiveRoute) || status) {
             mDVBStatus.antennaConnected(status);
         }
+    }
+
+    public String getSwVersion(SWVersionType type) {
+        return mDTVManager.getSoftwareUpdateControl().getSWVersion(type);
     }
 
     /**
