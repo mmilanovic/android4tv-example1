@@ -13,7 +13,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="Application version:"
+            android:text="@string/app_version"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         <TextView
             android:id="@+id/text_view_application_version"
@@ -30,7 +30,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="Framework version:"
+            android:text="@string/framework_version"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         <TextView
             android:id="@+id/text_view_framework_version"
@@ -47,7 +47,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="Middleware version:"
+            android:text="@string/middleware_version"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         <TextView
             android:id="@+id/text_view_middleware_version"
@@ -64,7 +64,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="SDK version"
+            android:text="@string/sdk_version"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         <TextView
             android:id="@+id/text_view_sdk_version"

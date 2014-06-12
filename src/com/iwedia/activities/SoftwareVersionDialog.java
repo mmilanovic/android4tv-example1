@@ -65,12 +65,10 @@ public class SoftwareVersionDialog extends Dialog {
         TextView textView = (TextView) findViewById(R.id.text_view_application_version);
         // TODO
         textView = (TextView) findViewById(R.id.text_view_framework_version);
-        // TODO
+        textView.setText(mDVBManager.getSwVersion(SWVersionType.MAL));
         textView = (TextView) findViewById(R.id.text_view_middleware_version);
-        // TODO
         textView.setText(mDVBManager.getSwVersion(SWVersionType.MWL));
         textView = (TextView) findViewById(R.id.text_view_sdk_version);
-        // TODO
         textView.setText(Build.VERSION.RELEASE);
     }
 }
