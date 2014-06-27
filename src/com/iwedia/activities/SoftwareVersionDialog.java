@@ -12,12 +12,13 @@ package com.iwedia.activities;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.RemoteException;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.TextView;
 
 import com.iwedia.dtv.DVBManager;
@@ -52,7 +53,7 @@ public class SoftwareVersionDialog extends Dialog {
             e.printStackTrace();
         }
         /** Initialize GridView. */
-        initialize();
+        initialize(context);
     }
 
     /**
@@ -61,9 +62,15 @@ public class SoftwareVersionDialog extends Dialog {
      * @throws RemoteException
      *         If connection error happens.
      */
-    private void initialize() {
+    private void initialize(Context context) {
         TextView textView = (TextView) findViewById(R.id.text_view_application_version);
-        // TODO
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(), 0);
+            textView.setText(pInfo.versionName);
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
         textView = (TextView) findViewById(R.id.text_view_framework_version);
         textView.setText(mDVBManager.getSwVersion(SWVersionType.MAL));
         textView = (TextView) findViewById(R.id.text_view_middleware_version);
